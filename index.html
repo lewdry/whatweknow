@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What We Know About You</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .greeting {
+            font-size: 1.3em;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .detail {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .detail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            color: #555;
+        }
+        .note {
+            margin-top: 40px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 8px;
+            color: #856404;
+            font-size: 0.9em;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.85em;
+            font-style: italic;
+            color: #999;
+        }
+        .footer a {
+            color: #999;
+            text-decoration: underline;
+        }
+        .footer a:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>What We Know About You</h1>
+        <div class="greeting" id="greeting">Analyzing your browser...</div>
+        
+        <div id="details"></div>
+        
+        <div class="note">
+            <strong>Privacy Note:</strong> All of this information is automatically shared by your browser with every website you visit. We cannot see your browsing history, other tabs, or cookies from other websites. Other websites take further steps to track you.
+        </div>
+        
+        <div class="footer">
+            What We Know About You, by <a href="https://lewisdryburgh.com" target="_blank">Lewis Dryburgh</a>, 2025
+        </div>
+    </div>
+
+    <script>
+        function getDetailedDevice() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            // iPhone models
+            if (ua.includes('iPhone')) {
+                if (screen.height === 932 || screen.width === 932) return 'iPhone 16 Pro Max, 15 Pro Max, or 14 Pro Max';
+                if (screen.height === 852 || screen.width === 852) return 'iPhone 16 Plus, 15 Plus, 14 Plus, or similar';
+                if (screen.height === 844 || screen.width === 844) return 'iPhone 16, 15, 14, 13, 12, or similar';
+                if (screen.height === 896 || screen.width === 896) return 'iPhone 11 Pro Max, XS Max, 11, or XR';
+                if (screen.height === 812 || screen.width === 812) return 'iPhone 13 mini, 12 mini, 11 Pro, XS, or X';
+                if (screen.height === 736 || screen.width === 736) return 'iPhone 8 Plus, 7 Plus, or 6s Plus';
+                if (screen.height === 667 || screen.width === 667) return 'iPhone SE (2nd/3rd gen), 8, 7, or 6s';
+                return 'iPhone';
+            }
+            
+            // iPad models
+            if (ua.includes('iPad') || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                const ratio = screen.width / screen.height;
+                if (screen.width >= 1024) {
+                    if (ratio > 1.3) return 'iPad Pro 12.9-inch';
+                    return 'iPad Pro 11-inch or iPad Air';
+                }
+                return 'iPad';
+            }
+            
+            // Mac models
+            if (platform.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) {
+                const cores = navigator.hardwareConcurrency;
+                const memory = navigator.deviceMemory;
+                
+                // Try to detect Apple Silicon
+                if (ua.includes('Macintosh')) {
+                    let model = 'Mac';
+                    
+                    // Rough estimates based on cores
+                    if (cores >= 10) {
+                        model = 'MacBook Pro (M3 Max/Pro or M2 Max/Pro)';
+                    } else if (cores === 8) {
+                        model = 'MacBook Pro, MacBook Air, or Mac mini (Apple Silicon)';
+                    } else if (cores === 4 || cores === 6) {
+                        model = 'MacBook Air or entry-level Mac (possibly Intel)';
+                    } else if (cores >= 12) {
+                        model = 'Mac Studio or Mac Pro';
+                    }
+                    
+                    return model;
+                }
+                return 'Mac';
+            }
+            
+            // Android devices
+            if (ua.includes('Android')) {
+                // Samsung
+                if (ua.includes('SM-S928') || ua.includes('SM-S926')) return 'Samsung Galaxy S24 Ultra or S23 Ultra';
+                if (ua.includes('SM-S921') || ua.includes('SM-S918')) return 'Samsung Galaxy S24 or S23';
+                if (ua.includes('SM-F946') || ua.includes('SM-F936')) return 'Samsung Galaxy Z Fold 5 or 4';
+                if (ua.includes('SM-F731') || ua.includes('SM-F721')) return 'Samsung Galaxy Z Flip 5 or 4';
+                if (ua.includes('Samsung')) return 'Samsung Android device';
+                
+                // Google Pixel
+                if (ua.includes('Pixel 9')) return 'Google Pixel 9';
+                if (ua.includes('Pixel 8')) return 'Google Pixel 8';
+                if (ua.includes('Pixel 7')) return 'Google Pixel 7';
+                if (ua.includes('Pixel')) return 'Google Pixel';
+                
+                // Generic Android
+                const width = screen.width;
+                if (width >= 1200) return 'Android tablet';
+                if (width >= 600) return 'large Android phone or small tablet';
+                return 'Android phone';
+            }
+            
+            // Windows devices
+            if (ua.includes('Windows NT')) {
+                const version = ua.match(/Windows NT (\d+\.\d+)/);
+                if (version) {
+                    const v = parseFloat(version[1]);
+                    if (v >= 10.0) return 'Windows 11 or 10 PC';
+                    if (v >= 6.3) return 'Windows 8.1 PC';
+                    if (v >= 6.1) return 'Windows 7 PC';
+                }
+                return 'Windows PC';
+            }
+            
+            // Linux
+            if (ua.includes('Linux') && !ua.includes('Android')) {
+                if (ua.includes('Ubuntu')) return 'Ubuntu Linux machine';
+                if (ua.includes('Fedora')) return 'Fedora Linux machine';
+                return 'Linux machine';
+            }
+            
+            return 'device';
+        }
+
+        function getDeviceType() {
+            const ua = navigator.userAgent.toLowerCase();
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+                return 'tablet';
+            }
+            if (/mobile|iphone|ipod|blackberry|opera mini|iemobile/i.test(ua)) {
+                return 'phone';
+            }
+            return 'computer';
+        }
+
+        function getBrowser() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Edg')) return 'Edge';
+            if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+            if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+            if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
+            return 'your browser';
+        }
+
+        function getOS() {
+            const ua = navigator.userAgent;
+            
+            if (ua.includes('Windows NT')) {
+                const version = ua.match(/Windows NT (\d+\.\d+)/);
+                if (version && parseFloat(version[1]) >= 10.0) return 'Windows 11 or 10';
+                return 'Windows';
+            }
+            if (ua.includes('Mac OS X')) {
+                const version = ua.match(/Mac OS X (\d+)[_.](\d+)/);
+                if (version) {
+                    const major = parseInt(version[1]);
+                    const minor = parseInt(version[2]);
+                    if (major === 10) {
+                        if (minor >= 15) return 'macOS Catalina or newer';
+                        return 'macOS ' + minor;
+                    }
+                    if (major >= 11) return 'macOS ' + major;
+                }
+                return 'macOS';
+            }
+            if (ua.includes('Android')) {
+                const version = ua.match(/Android (\d+)/);
+                if (version) return 'Android ' + version[1];
+                return 'Android';
+            }
+            if (ua.includes('iOS') || navigator.platform.includes('iPhone') || navigator.platform.includes('iPad')) {
+                return 'iOS';
+            }
+            if (ua.includes('Linux')) return 'Linux';
+            return 'your operating system';
+        }
+
+        function getTimeOfDay() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'morning';
+            if (hour < 17) return 'afternoon';
+            if (hour < 21) return 'evening';
+            return 'night';
+        }
+
+        function getHumanReadableLanguage(code) {
+            const languages = {
+                'en': 'English',
+                'en-US': 'English (United States)',
+                'en-GB': 'English (United Kingdom)',
+                'en-AU': 'English (Australia)',
+                'en-CA': 'English (Canada)',
+                'en-NZ': 'English (New Zealand)',
+                'en-IE': 'English (Ireland)',
+                'en-ZA': 'English (South Africa)',
+                'es': 'Spanish',
+                'es-ES': 'Spanish (Spain)',
+                'es-MX': 'Spanish (Mexico)',
+                'es-AR': 'Spanish (Argentina)',
+                'fr': 'French',
+                'fr-FR': 'French (France)',
+                'fr-CA': 'French (Canada)',
+                'de': 'German',
+                'de-DE': 'German (Germany)',
+                'de-AT': 'German (Austria)',
+                'de-CH': 'German (Switzerland)',
+                'it': 'Italian',
+                'it-IT': 'Italian (Italy)',
+                'pt': 'Portuguese',
+                'pt-BR': 'Portuguese (Brazil)',
+                'pt-PT': 'Portuguese (Portugal)',
+                'zh': 'Chinese',
+                'zh-CN': 'Chinese (Simplified)',
+                'zh-TW': 'Chinese (Traditional)',
+                'zh-HK': 'Chinese (Hong Kong)',
+                'ja': 'Japanese',
+                'ja-JP': 'Japanese (Japan)',
+                'ko': 'Korean',
+                'ko-KR': 'Korean (South Korea)',
+                'ru': 'Russian',
+                'ru-RU': 'Russian (Russia)',
+                'ar': 'Arabic',
+                'ar-SA': 'Arabic (Saudi Arabia)',
+                'ar-EG': 'Arabic (Egypt)',
+                'hi': 'Hindi',
+                'hi-IN': 'Hindi (India)',
+                'nl': 'Dutch',
+                'nl-NL': 'Dutch (Netherlands)',
+                'nl-BE': 'Dutch (Belgium)',
+                'pl': 'Polish',
+                'pl-PL': 'Polish (Poland)',
+                'tr': 'Turkish',
+                'tr-TR': 'Turkish (Turkey)',
+                'sv': 'Swedish',
+                'sv-SE': 'Swedish (Sweden)',
+                'da': 'Danish',
+                'da-DK': 'Danish (Denmark)',
+                'no': 'Norwegian',
+                'nb': 'Norwegian (Bokmål)',
+                'nn': 'Norwegian (Nynorsk)',
+                'fi': 'Finnish',
+                'fi-FI': 'Finnish (Finland)',
+                'el': 'Greek',
+                'el-GR': 'Greek (Greece)',
+                'cs': 'Czech',
+                'cs-CZ': 'Czech (Czech Republic)',
+                'hu': 'Hungarian',
+                'hu-HU': 'Hungarian (Hungary)',
+                'ro': 'Romanian',
+                'ro-RO': 'Romanian (Romania)',
+                'th': 'Thai',
+                'th-TH': 'Thai (Thailand)',
+                'vi': 'Vietnamese',
+                'vi-VN': 'Vietnamese (Vietnam)',
+                'id': 'Indonesian',
+                'id-ID': 'Indonesian (Indonesia)',
+                'ms': 'Malay',
+                'ms-MY': 'Malay (Malaysia)',
+                'uk': 'Ukrainian',
+                'uk-UA': 'Ukrainian (Ukraine)',
+                'he': 'Hebrew',
+                'he-IL': 'Hebrew (Israel)',
+                'bg': 'Bulgarian',
+                'bg-BG': 'Bulgarian (Bulgaria)',
+                'hr': 'Croatian',
+                'hr-HR': 'Croatian (Croatia)',
+                'sk': 'Slovak',
+                'sk-SK': 'Slovak (Slovakia)',
+                'sl': 'Slovenian',
+                'sl-SI': 'Slovenian (Slovenia)',
+                'sr': 'Serbian',
+                'sr-RS': 'Serbian (Serbia)',
+                'ca': 'Catalan',
+                'ca-ES': 'Catalan (Spain)',
+                'et': 'Estonian',
+                'et-EE': 'Estonian (Estonia)',
+                'lv': 'Latvian',
+                'lv-LV': 'Latvian (Latvia)',
+                'lt': 'Lithuanian',
+                'lt-LT': 'Lithuanian (Lithuania)',
+                'is': 'Icelandic',
+                'is-IS': 'Icelandic (Iceland)',
+                'af': 'Afrikaans',
+                'af-ZA': 'Afrikaans (South Africa)',
+                'sq': 'Albanian',
+                'sq-AL': 'Albanian (Albania)',
+                'bn': 'Bengali',
+                'bn-BD': 'Bengali (Bangladesh)',
+                'bn-IN': 'Bengali (India)',
+                'bs': 'Bosnian',
+                'bs-BA': 'Bosnian (Bosnia and Herzegovina)',
+                'gu': 'Gujarati',
+                'gu-IN': 'Gujarati (India)',
+                'kn': 'Kannada',
+                'kn-IN': 'Kannada (India)',
+                'mr': 'Marathi',
+                'mr-IN': 'Marathi (India)',
+                'ta': 'Tamil',
+                'ta-IN': 'Tamil (India)',
+                'te': 'Telugu',
+                'te-IN': 'Telugu (India)',
+                'ur': 'Urdu',
+                'ur-PK': 'Urdu (Pakistan)',
+                'fa': 'Persian',
+                'fa-IR': 'Persian (Iran)',
+                'sw': 'Swahili',
+                'sw-KE': 'Swahili (Kenya)',
+            };
+            
+            return languages[code] || code;
+        }
+
+        async function getLocationFromIP() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                return {
+                    country: data.country_name,
+                    city: data.city,
+                    region: data.region,
+                    timezone: data.timezone
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function generateGreeting() {
+            const browser = getBrowser();
+            const device = getDetailedDevice();
+            const deviceType = getDeviceType();
+            const timeOfDay = getTimeOfDay();
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const os = getOS();
+            
+            // Get connection info
+            let connectionInfo = '';
+            if (navigator.connection) {
+                const conn = navigator.connection;
+                const effectiveType = conn.effectiveType || '';
+                const downlink = conn.downlink;
+                
+                if (effectiveType) {
+                    const speedNames = {
+                        'slow-2g': 'very slow (2G)',
+                        '2g': 'slow (2G)',
+                        '3g': 'moderate (3G)',
+                        '4g': 'fast (4G/5G)'
+                    };
+                    connectionInfo = speedNames[effectiveType] || effectiveType;
+                    if (downlink) {
+                        connectionInfo += ` at ~${downlink} Mbps`;
+                    }
+                }
+            }
+            
+            // Get battery info
+            let batteryInfo = '';
+            try {
+                if (navigator.getBattery) {
+                    const battery = await navigator.getBattery();
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging;
+                    batteryInfo = `${level}% ${charging ? '(charging)' : '(not charging)'}`;
+                }
+            } catch (e) {
+                // Battery API not available or blocked
+            }
+            
+            // Get location
+            const location = await getLocationFromIP();
+            
+            let greeting = `Good ${timeOfDay}! `;
+            
+            if (location && location.country) {
+                greeting += `Hello from ${location.country}`;
+                if (location.city) {
+                    greeting += `, looks like you're in ${location.city}`;
+                }
+                greeting += '. ';
+            }
+            
+            greeting += `I can see you're using ${browser} on `;
+            
+            // Make it sound natural
+            if (device.includes('MacBook') || device.includes('Mac')) {
+                if (device.includes('or')) {
+                    greeting += `what appears to be a ${device}`;
+                } else {
+                    greeting += `a ${device}`;
+                }
+            } else if (device.includes('iPhone') || device.includes('iPad') || device.includes('Samsung') || device.includes('Pixel')) {
+                greeting += `a ${device}`;
+            } else if (device.includes('Windows') || device.includes('Linux')) {
+                greeting += `a ${device}`;
+            } else {
+                greeting += `your ${device}`;
+            }
+            
+            greeting += `.`;
+            
+            // Add time-specific comment
+            const hour = new Date().getHours();
+            if (hour >= 23 || hour < 6) {
+                greeting += ` Burning the midnight oil, I see.`;
+            } else if (hour >= 9 && hour < 17) {
+                greeting += ` Working hard, I hope!`;
+            }
+
+            document.getElementById('greeting').textContent = greeting;
+            
+            // Add details
+            const detailsHTML = `
+                <div class="detail">
+                    <div class="detail-title">Your Browser</div>
+                    <div class="detail-value">${browser} on ${os}</div>
+                </div>
+                
+                <div class="detail">
+                    <div class="detail-title">Your Device</div>
+                    <div class="detail-value">${device} (${deviceType}) with a ${screen.width}×${screen.height} screen at ${window.devicePixelRatio}x pixel density</div>
+                </div>
+                
+                <div class="detail">
+                    <div class="detail-title">Your Location & Time</div>
+                    <div class="detail-value">${location ? `${location.city}, ${location.country} • ` : ''}${timezone} • ${new Date().toLocaleTimeString()} local time</div>
+                </div>
+                
+                <div class="detail">
+                    <div class="detail-title">Your Language</div>
+                    <div class="detail-value">${getHumanReadableLanguage(navigator.language)}${navigator.languages.length > 1 ? ' (also speaks: ' + navigator.languages.slice(1, 4).map(l => getHumanReadableLanguage(l)).join(', ') + ')' : ''}</div>
+                </div>
+                
+                <div class="detail">
+                    <div class="detail-title">Technical Details</div>
+                    <div class="detail-value">
+                        ${navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' CPU cores' : 'CPU cores unknown'}${navigator.deviceMemory ? ' • ' + navigator.deviceMemory + 'GB RAM' : ''} • 
+                        ${screen.colorDepth}-bit color • 
+                        Cookies ${navigator.cookieEnabled ? 'enabled' : 'disabled'}${connectionInfo ? ' • Connection: ' + connectionInfo : ''}${batteryInfo ? ' • Battery: ' + batteryInfo : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('details').innerHTML = detailsHTML;
+        }
+
+        generateGreeting();
+    </script>
+</body>
+</html>
