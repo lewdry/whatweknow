@@ -396,6 +396,16 @@
             }
         }
 
+        async function getIPv4Address() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // Simple adblock detection: insert a "bait" element with common ad-related classnames
         // and check whether it's hidden or removed by an ad-blocker.
         // Returns true if blocked/hidden, false otherwise.
@@ -478,6 +488,9 @@
             
             // Get location
             const location = await getLocationFromIP();
+            
+            // Get IPv4 address
+            const ipv4 = await getIPv4Address();
 
             // Detect adblocker presence
             const adblockEnabled = await detectAdblock();
@@ -540,7 +553,7 @@
                 
                 <div class="detail">
                     <div class="detail-title">Your IP Address</div>
-                    <div class="detail-value">${location && location.ip ? location.ip : 'Unable to detect'}</div>
+                    <div class="detail-value">${location && location.ip ? location.ip : ipv4 ? ipv4 : 'Unable to detect'}${ipv4 && location && location.ip && location.ip !== ipv4 ? ' • IPv4: ' + ipv4 : ''}</div>
                 </div>
                 
                 <div class="detail">
