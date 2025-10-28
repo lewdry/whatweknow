@@ -388,7 +388,8 @@
                     country: data.country_name,
                     city: data.city,
                     region: data.region,
-                    timezone: data.timezone
+                    timezone: data.timezone,
+                    ip: data.ip
                 };
             } catch (e) {
                 return null;
@@ -535,6 +536,11 @@
                 <div class="detail">
                     <div class="detail-title">Your Location & Time</div>
                     <div class="detail-value">${location ? `${location.city}, ${location.country} • ` : ''}${timezone} • ${new Date().toLocaleTimeString()} local time</div>
+                </div>
+                
+                <div class="detail">
+                    <div class="detail-title">Your IP Address</div>
+                    <div class="detail-value">${location && location.ip ? location.ip : 'Unable to detect'}</div>
                 </div>
                 
                 <div class="detail">
