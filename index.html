@@ -78,7 +78,7 @@
         <div id="details"></div>
         
         <div class="note">
-            <strong>Privacy Note:</strong> All of this information is automatically shared by your browser with every website you visit. We cannot see your browsing history, other tabs, or cookies from other websites. Other websites take further steps to track you.
+            <strong>Privacy Note:</strong> This information is automatically shared by your browser with every site you visit. We cannot see your browsing history, other tabs, or cookies from other websites. Other sites take further steps to track you.
         </div>
         
         <div class="footer">
@@ -441,7 +441,7 @@
                 greeting += '. ';
             }
             
-            greeting += `I can see you're using ${browser} on `;
+            greeting += `We can see you're using ${browser} on `;
             
             // Make it sound natural
             if (device.includes('MacBook') || device.includes('Mac')) {
@@ -463,9 +463,9 @@
             // Add time-specific comment
             const hour = new Date().getHours();
             if (hour >= 23 || hour < 6) {
-                greeting += ` Burning the midnight oil, I see.`;
+                greeting += ` Burning the midnight oil, hey?`;
             } else if (hour >= 9 && hour < 17) {
-                greeting += ` Working hard, I hope!`;
+                greeting += ` Working hard, we hope!`;
             }
 
             document.getElementById('greeting').textContent = greeting;
