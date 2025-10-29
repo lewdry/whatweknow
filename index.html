@@ -5,15 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What We Know About You</title>
     <style>
-        html, body {
+        /* Keep html sized to the viewport, but avoid forcing body to an exact
+           height so it can grow when content expands (prevents layout clipping).
+        */
+        html {
             height: 100%;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            /* Make the gradient cover the full viewport so there are no edges from a constrained body box */
+          body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                margin: 0;
+                box-sizing: border-box;
+                padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -22,7 +25,7 @@
         }
         .card {
             max-width: 600px; /* move the width constraint to the card so the body background fills the viewport */
-            margin: 50px auto;
+            margin: 20px auto;
             background: white;
             border-radius: 16px;
             padding: 40px;
@@ -38,6 +41,8 @@
             line-height: 1.8;
             color: #333;
             margin-bottom: 40px;
+            /* Preserve newlines in the greeting text so `\n` appears as a line break */
+            white-space: pre-wrap;
         }
         .detail {
             background: #f8f9fa;
@@ -63,18 +68,19 @@
             font-size: 0.9em;
         }
         .footer {
-            margin-top: 30px;
-            text-align: center;
+            max-width: 600px;
+            margin: 20px auto 0;
+            text-align: left;
             font-size: 0.85em;
             font-style: italic;
-            color: #999;
+            color: #ffffff;
         }
         .footer a {
-            color: #999;
+            color: #ffffff;
             text-decoration: underline;
         }
         .footer a:hover {
-            color: #667eea;
+            color: #e88a47; /* old #667eea*/
             text-decoration: underline;
         }
     </style>
@@ -87,12 +93,13 @@
         <div id="details"></div>
         
         <div class="note">
-            <strong>Privacy Note:</strong> This information is automatically shared by your browser with every site you visit. We cannot see your browsing history, other tabs, or cookies from other websites. Other sites take further steps to track you.
+            <strong>Privacy Note:</strong> We do not store your data. This information is shared by your browser with every site you visit. We can't see your browsing history, other tabs, or cookies from other websites. Other sites take further steps to track you across the web.
         </div>
         
-        <div class="footer">
-            What We Know About You, by <a href="https://lewisdryburgh.com" target="_blank">Lewis Dryburgh</a>, 2025
-        </div>
+    </div>
+
+    <div class="footer">
+        What We Know About You, by <a href="https://lewisdryburgh.com" target="_blank">Lewis Dryburgh</a>, 2025
     </div>
 
     <script>
@@ -124,24 +131,21 @@
             
             // Mac models
             if (platform.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) {
-                const cores = navigator.hardwareConcurrency;
-                const memory = navigator.deviceMemory;
-                
-                // Try to detect Apple Silicon
+                // Use User-Agent hints where available to provide a generic Mac model
                 if (ua.includes('Macintosh')) {
                     let model = 'Mac';
-                    
-                    // Rough estimates based on cores
-                    if (cores >= 10) {
-                        model = 'MacBook Pro (M3 Max/Pro or M2 Max/Pro)';
-                    } else if (cores === 8) {
-                        model = 'MacBook Pro, MacBook Air, or Mac mini (Apple Silicon)';
-                    } else if (cores === 4 || cores === 6) {
-                        model = 'MacBook Air or entry-level Mac (possibly Intel)';
-                    } else if (cores >= 12) {
-                        model = 'Mac Studio or Mac Pro';
+
+                    // Provide simple UA-based fallbacks instead of relying on hardware APIs
+                    if (ua.includes('MacBook')) {
+                        model = 'MacBook';
+                    } else if (/Mac ?mini/i.test(ua)) {
+                        model = 'Mac mini';
+                    } else if (/Mac ?Studio/i.test(ua)) {
+                        model = 'Mac Studio';
+                    } else if (/Mac ?Pro/i.test(ua)) {
+                        model = 'Mac Pro';
                     }
-                    
+
                     return model;
                 }
                 return 'Mac';
@@ -212,37 +216,82 @@
             return 'your browser';
         }
 
-        function getOS() {
-            const ua = navigator.userAgent;
-            
-            if (ua.includes('Windows NT')) {
-                const version = ua.match(/Windows NT (\d+\.\d+)/);
-                if (version && parseFloat(version[1]) >= 10.0) return 'Windows 11 or 10';
-                return 'Windows';
-            }
-            if (ua.includes('Mac OS X')) {
-                const version = ua.match(/Mac OS X (\d+)[_.](\d+)/);
-                if (version) {
-                    const major = parseInt(version[1]);
-                    const minor = parseInt(version[2]);
-                    if (major === 10) {
-                        if (minor >= 15) return 'macOS Catalina or newer';
-                        return 'macOS ' + minor;
+        // Provide richer browser name/version info.
+        // Uses User-Agent Client Hints where available, falling back to parsing navigator.userAgent.
+        async function getBrowserDetails() {
+            const ua = navigator.userAgent || '';
+
+            // Use UA-CH when available for more accurate brand/version info (Chrome, Edge, etc.)
+            if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+                try {
+                    const high = await navigator.userAgentData.getHighEntropyValues(['brands', 'fullVersionList']);
+                    const list = high.fullVersionList && high.fullVersionList.length ? high.fullVersionList : (high.brands || []);
+
+                    // Prefer a known browser brand if present, otherwise take the first entry
+                    let picked = null;
+                    for (const entry of list) {
+                        const brand = entry.brand || entry;
+                        const version = entry.version || '';
+                        const lb = (brand + '').toLowerCase();
+                        if (lb.includes('chrome') || lb.includes('safari') || lb.includes('edge') || lb.includes('firefox') || lb.includes('opera')) {
+                            picked = { brand, version };
+                            break;
+                        }
                     }
-                    if (major >= 11) return 'macOS ' + major;
+                    if (!picked && list.length) {
+                        const e = list[0];
+                        picked = { brand: e.brand || e, version: e.version || '' };
+                    }
+                    if (picked) {
+                        return `${picked.brand}${picked.version ? ' ' + picked.version : ''} (via UA-CH)`;
+                    }
+                } catch (e) {
+                    // Fall through to UA parsing
                 }
-                return 'macOS';
             }
-            if (ua.includes('Android')) {
-                const version = ua.match(/Android (\d+)/);
-                if (version) return 'Android ' + version[1];
-                return 'Android';
+
+            // Fallback: parse navigator.userAgent
+            // Look for common tokens: Firefox/xx, Edg/xx, Chrome/xx, CriOS/xx (Chrome on iOS), Version/x (Safari)
+            const match = ua.match(/(Firefox|Edg|Chrome|CriOS|Safari|OPR|Opera)\/? ?([0-9._]+)/i);
+            if (match) {
+                let name = match[1];
+                let version = match[2];
+                if (name === 'CriOS') name = 'Chrome';
+                if (name === 'Edg') name = 'Edge';
+                if (name === 'OPR') name = 'Opera';
+
+                // Safari on some platforms exposes a WebKit build identifier (e.g. Safari/605.1.15)
+                // which is not the human-facing Safari major version. Map known WebKit build
+                // prefixes to a Safari major version for a friendlier display. Treat this as
+                // a best-effort mapping — add more entries here if you see other build IDs.
+                if (name === 'Safari') {
+                    // Prefer an explicit "Version/X" token in the UA when present —
+                    // this typically contains the human-facing Safari version (e.g. "Version/26.0").
+                    // Only when that's missing do we fall back to the WebKit build -> Safari mapping.
+                    const explicitVersionMatch = ua.match(/Version\/([0-9._]+)/);
+                    if (explicitVersionMatch) {
+                        return `Safari ${explicitVersionMatch[1]}`;
+                    }
+
+                    const buildPrefix = (version || '').split('.')[0];
+                    const webkitToSafari = {
+                        '605': '26'
+                        // add other mappings here if needed, e.g. '604': '14'
+                    };
+                    if (webkitToSafari[buildPrefix]) {
+                        return `Safari ${webkitToSafari[buildPrefix]}`;
+                    }
+                }
+
+                return `${name} ${version}`;
             }
-            if (ua.includes('iOS') || navigator.platform.includes('iPhone') || navigator.platform.includes('iPad')) {
-                return 'iOS';
-            }
-            if (ua.includes('Linux')) return 'Linux';
-            return 'your operating system';
+
+            // Safari sometimes uses Version/X.Y
+            const safariMatch = ua.match(/Version\/([0-9._]+).*Safari/);
+            if (safariMatch) return `Safari ${safariMatch[1]}`;
+
+            // As a last resort, return the raw UA (trimmed)
+            return ua ? (ua.length > 120 ? ua.slice(0, 117) + '...' : ua) : 'Unknown browser';
         }
 
         function getTimeOfDay() {
@@ -381,19 +430,60 @@
         }
 
         async function getLocationFromIP() {
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-                return {
-                    country: data.country_name,
-                    city: data.city,
-                    region: data.region,
-                    timezone: data.timezone,
-                    ip: data.ip
-                };
-            } catch (e) {
-                return null;
+            // Try a couple of public IP geolocation endpoints with graceful fallback.
+            // This increases reliability when one provider blocks or rate-limits requests.
+            async function tryIpApi(url, mapper) {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.json();
+                    return mapper(data);
+                } catch (e) {
+                    // Return null so callers can try the next provider
+                    console.debug('IP lookup failed for', url, e && e.message);
+                    return null;
+                }
             }
+
+            // ipapi.co: returns country_name and country (alpha-2)
+            const fromIpApi = await tryIpApi('https://ipapi.co/json/', data => {
+                if (!data) return null;
+                return {
+                    country: data.country_name || data.country || data.country_code || null,
+                    country_code: data.country || data.country_code || null,
+                    city: data.city || null,
+                    region: data.region || null,
+                    timezone: data.timezone || null,
+                    ip: data.ip || null
+                };
+            });
+            if (fromIpApi) return fromIpApi;
+
+            // ipwho.is: different shape but widely available
+            const fromIpWho = await tryIpApi('https://ipwho.is/', data => {
+                if (!data || data.success === false) return null;
+                return {
+                    country: data.country || null,
+                    country_code: data.country_code || null,
+                    city: data.city || null,
+                    region: data.region || null,
+                    timezone: data.timezone || null,
+                    ip: data.ip || null
+                };
+            });
+            if (fromIpWho) return fromIpWho;
+
+            // If everything fails, return null so caller can fall back to timezone/other hints
+            return null;
+        }
+
+        // Convert a 2-letter country code (e.g. 'GB', 'US') to the emoji flag
+        function countryCodeToFlagEmoji(code) {
+            if (!code) return '';
+            const cc = (code + '').toUpperCase();
+            if (cc.length !== 2) return '';
+            // Regional Indicator Symbol Letter A starts at Unicode 127462 (0x1F1E6) which is 127397 + 'A'.charCodeAt(0)
+            return String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0)));
         }
 
         async function getIPv4Address() {
@@ -446,11 +536,11 @@
 
         async function generateGreeting() {
             const browser = getBrowser();
+            const browserDetails = await getBrowserDetails();
             const device = getDetailedDevice();
             const deviceType = getDeviceType();
             const timeOfDay = getTimeOfDay();
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const os = getOS();
             
             // Get connection info
             let connectionInfo = '';
@@ -496,16 +586,13 @@
             const adblockEnabled = await detectAdblock();
             
             let greeting = `Good ${timeOfDay}! `;
-            
+
             if (location && location.country) {
-                greeting += `Hello ${location.country}`;
-                if (location.city) {
-                    greeting += `, looks like you're in ${location.city}`;
-                }
-                greeting += '. ';
+                const flag = countryCodeToFlagEmoji(location.country_code);
+                greeting += `Looks like you're in ${location.city ? location.city + ', ' : ''}${location.country}${flag ? ' ' + flag : ''} `;
             }
-            
-            greeting += `We can see you're using ${browser} on `;
+
+            greeting += `\nWe can see you're using ${browser} on `;
             
             // Make it sound natural
             if (device.includes('MacBook') || device.includes('Mac')) {
@@ -527,18 +614,77 @@
             // Add time-specific comment
             const hour = new Date().getHours();
             if (hour >= 23 || hour < 6) {
-                greeting += ` Burning the midnight oil, hey?`;
+                greeting += `\nBurning the midnight oil, hey?`;
             } else if (hour >= 9 && hour < 17) {
-                greeting += ` Working hard, we hope!`;
+                greeting += `\nWorking hard, we hope!`;
             }
 
             document.getElementById('greeting').textContent = greeting;
             
             // Add details
+            const rawUA = navigator.userAgent || '';
+            const uaEscaped = rawUA.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const uaChInfo = (navigator.userAgentData && navigator.userAgentData.brands) ? ' • UA-CH: ' + JSON.stringify(navigator.userAgentData.brands) : '';
+
+            // IP display rules per user request:
+            // 1) If an IPv4 is available, display only that (never show two IPv4s).
+            // 2) If the primary IP is IPv6, also show an IPv4 if available (IPv6 + IPv4 allowed).
+            // 3) Never display two IPv4 addresses.
+            function isIPv4(ip) {
+                return typeof ip === 'string' && /^\d{1,3}(?:\.\d{1,3}){3}$/.test(ip);
+            }
+            function isIPv6(ip) {
+                return typeof ip === 'string' && ip.indexOf(':') !== -1;
+            }
+
+            const geoIp = (location && location.ip) ? location.ip : null;
+            const ipifyIp = ipv4 || null; // result from getIPv4Address (may return IPv6 on some networks)
+
+            let shown = [];
+            // Prefer a clear IPv4 if present (geo first, then ipify)
+            if (geoIp && isIPv4(geoIp)) {
+                shown = [geoIp];
+            } else if (ipifyIp && isIPv4(ipifyIp)) {
+                shown = [ipifyIp];
+            } else if (geoIp && isIPv6(geoIp)) {
+                // Primary is IPv6; include IPv4 if we can find one
+                if (ipifyIp && isIPv4(ipifyIp)) shown = [geoIp, ipifyIp];
+                else shown = [geoIp];
+            } else if (ipifyIp && isIPv6(ipifyIp)) {
+                // ipify returned IPv6 but geo didn't provide anything useful
+                if (geoIp && isIPv4(geoIp)) shown = [ipifyIp, geoIp];
+                else shown = [ipifyIp];
+            } else if (geoIp) {
+                // Fallback: show whatever geo gave us
+                shown = [geoIp];
+            } else if (ipifyIp) {
+                shown = [ipifyIp];
+            }
+
+            // Ensure we never show two IPv4s — dedupe and prefer the first
+            if (shown.length > 1) {
+                const bothIPv4 = isIPv4(shown[0]) && isIPv4(shown[1]);
+                if (bothIPv4) {
+                    shown = [shown[0]];
+                }
+            }
+
+            let ipTitle = 'Your IP Address';
+            let ipValue = 'Unable to detect';
+            let ipFootnote = '';
+
+            if (shown.length === 1) {
+                ipValue = shown[0];
+            } else if (shown.length === 2) {
+                ipTitle = 'Your IP Addresses';
+                ipValue = shown[0] + '<br>' + shown[1];
+            }
+
             const detailsHTML = `
                 <div class="detail">
                     <div class="detail-title">Your Browser</div>
-                    <div class="detail-value">${browser} on ${os}</div>
+                    <div class="detail-value">${browserDetails}
+                    </div>
                 </div>
                 
                 <div class="detail">
@@ -548,12 +694,12 @@
                 
                 <div class="detail">
                     <div class="detail-title">Your Location & Time</div>
-                    <div class="detail-value">${location ? `${location.city}, ${location.country} • ` : ''}${timezone} • ${new Date().toLocaleTimeString()} local time</div>
+                    <div class="detail-value">${location ? `${location.city ? location.city + ', ' : ''}${location.country}${location.country_code ? ' ' + countryCodeToFlagEmoji(location.country_code) : ''} • ` : ''}${timezone} • ${new Date().toLocaleTimeString()} local time</div>
                 </div>
                 
                 <div class="detail">
-                    <div class="detail-title">Your IP Address</div>
-                    <div class="detail-value">${location && location.ip ? location.ip : ipv4 ? ipv4 : 'Unable to detect'}${ipv4 && location && location.ip && location.ip !== ipv4 ? ' • IPv4: ' + ipv4 : ''}</div>
+                    <div class="detail-title">${ipTitle}</div>
+                    <div class="detail-value">${ipValue}${ipFootnote}</div>
                 </div>
                 
                 <div class="detail">
@@ -564,7 +710,6 @@
                 <div class="detail">
                     <div class="detail-title">Technical Details</div>
                     <div class="detail-value">
-                        ${navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' CPU cores' : 'CPU cores unknown'}${navigator.deviceMemory ? ' • ' + navigator.deviceMemory + 'GB RAM' : ''} • 
                         Cookies ${navigator.cookieEnabled ? 'enabled' : 'disabled'} • Ad blocker: ${adblockEnabled ? 'enabled' : 'none'}${connectionInfo ? ' • Connection: ' + connectionInfo : ''}${batteryInfo ? ' • Battery: ' + batteryInfo : ''}
                         <div style="margin-top:8px; font-weight:600">Time on page: <span id="time-on-page">0s</span></div>
                     </div>
