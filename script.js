@@ -418,41 +418,245 @@ async function getIPv4Address() {
     }
 }
 
-// Simple adblock detection: insert a "bait" element with common ad-related classnames
-// and check whether it's hidden or removed by an ad-blocker.
+// Enhanced adblock detection: uses multiple methods to detect ad blockers
 // Returns true if blocked/hidden, false otherwise.
-function detectAdblock(timeout = 150) {
+// Now distinguishes between actual ad blockers and Safari's built-in privacy features
+function detectAdblock(timeout = 500) {
     return new Promise(resolve => {
-        try {
-            const bait = document.createElement('div');
-            // Common class names that adblockers target
-            bait.className = 'adsbox ad-banner adunit adsbygoogle advert';
-            // Keep it off-screen so it doesn't affect layout
-            bait.style.position = 'absolute';
-            bait.style.left = '-9999px';
-            bait.style.width = '1px';
-            bait.style.height = '1px';
-            bait.innerHTML = '&nbsp;';
-            document.body.appendChild(bait);
+        let detectionCount = 0;
+        let totalTests = 0;
+        let safariNativeBlocking = 0;
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        // Test 1: Traditional bait element with common ad classes (most reliable for actual ad blockers)
+        function testBaitElement() {
+            totalTests++;
+            try {
+                const bait = document.createElement('div');
+                // More comprehensive list of class names that adblockers target
+                bait.className = 'adsbox ad-banner adunit adsbygoogle advert advertisement ads banner-ad google-ads pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links ad-text adSense AdSense ad-sense adsense google-ad googlead google_ad ad_300x250 sponsor-ads ads-by-google adnxs';
+                bait.id = 'ad_banner_300x250';
+                // Use more realistic ad dimensions and positioning
+                bait.style.position = 'absolute';
+                bait.style.left = '-9999px';
+                bait.style.top = '0px';
+                bait.style.width = '300px';
+                bait.style.height = '250px';
+                bait.style.display = 'block';
+                bait.innerHTML = '<span>Advertisement</span>';
+                document.body.appendChild(bait);
 
-            window.setTimeout(() => {
-                let blocked = false;
-                try {
-                    const style = window.getComputedStyle(bait);
-                    // If element is not in the layout, has zero height, or display:none, it's likely blocked
-                    blocked = (bait.offsetParent === null) || (bait.offsetHeight === 0) || (style && (style.display === 'none' || style.visibility === 'hidden'));
-                } catch (e) {
-                    // If reading styles fails, assume not blocked
-                    blocked = false;
-                }
-                // Clean up
-                if (bait.parentNode) bait.parentNode.removeChild(bait);
-                resolve(blocked);
-            }, timeout);
-        } catch (e) {
-            // Any unexpected error -> treat as unknown / not blocked
-            resolve(false);
+                setTimeout(() => {
+                    try {
+                        const style = window.getComputedStyle(bait);
+                        const isBlocked = (
+                            bait.offsetParent === null ||
+                            bait.offsetHeight === 0 ||
+                            bait.offsetWidth === 0 ||
+                            (style && (
+                                style.display === 'none' ||
+                                style.visibility === 'hidden' ||
+                                style.opacity === '0' ||
+                                parseInt(style.height) === 0 ||
+                                parseInt(style.width) === 0
+                            ))
+                        );
+                        
+                        if (isBlocked) {
+                            detectionCount++;
+                            console.log('Bait element test: BLOCKED (likely actual ad blocker)');
+                        } else {
+                            console.log('Bait element test: not blocked');
+                        }
+                        
+                        // Clean up
+                        if (bait.parentNode) bait.parentNode.removeChild(bait);
+                    } catch (e) {
+                        // Element might have been removed by ad blocker
+                        detectionCount++;
+                        console.log('Bait element test: BLOCKED (element removed/error - likely actual ad blocker)');
+                    }
+                }, 100);
+            } catch (e) {
+                // Creation failed, likely blocked
+                detectionCount++;
+                console.log('Bait element test: BLOCKED (creation failed)');
+            }
         }
+        
+        // Test 2: Check for blocked external ad resources (can be Safari ITP or actual ad blocker)
+        function testExternalResource() {
+            totalTests++;
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    // Ad resource loaded successfully
+                    console.log('External resource test: not blocked');
+                };
+                img.onerror = () => {
+                    // Ad resource blocked - could be Safari ITP or actual ad blocker
+                    if (isSafari) {
+                        safariNativeBlocking++;
+                        console.log('External resource test: BLOCKED (likely Safari ITP)');
+                    } else {
+                        detectionCount++;
+                        console.log('External resource test: BLOCKED');
+                    }
+                };
+                // Use a 1x1 pixel tracking image that ad blockers commonly block
+                img.src = 'https://googleads.g.doubleclick.net/pagead/viewthroughconversion/1234567890/?random=' + Math.random();
+                
+                // Timeout in case neither onload nor onerror fires
+                setTimeout(() => {
+                    if (!img.complete) {
+                        if (isSafari) {
+                            safariNativeBlocking++;
+                            console.log('External resource test: TIMEOUT (likely Safari ITP)');
+                        } else {
+                            detectionCount++;
+                            console.log('External resource test: TIMEOUT');
+                        }
+                    }
+                }, 200);
+            } catch (e) {
+                detectionCount++;
+                console.log('External resource test: ERROR');
+            }
+        }
+        
+        // Test 3: Try to create a script element that ad blockers would block
+        function testScriptBlocking() {
+            totalTests++;
+            try {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.style.display = 'none';
+                // Use a more reliable ad script URL that returns proper JavaScript MIME type
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+                
+                script.onerror = () => {
+                    // Script blocked - could be Safari ITP or actual ad blocker
+                    if (isSafari) {
+                        safariNativeBlocking++;
+                        console.log('Script blocking test: BLOCKED (likely Safari ITP)');
+                    } else {
+                        detectionCount++;
+                        console.log('Script blocking test: BLOCKED');
+                    }
+                };
+                
+                script.onload = () => {
+                    // If this loads, probably no ad blocker
+                    console.log('Script blocking test: not blocked');
+                };
+                
+                document.head.appendChild(script);
+                
+                // Clean up after test
+                setTimeout(() => {
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                }, 300);
+                
+            } catch (e) {
+                if (isSafari) {
+                    safariNativeBlocking++;
+                    console.log('Script blocking test: ERROR (likely Safari ITP)');
+                } else {
+                    detectionCount++;
+                    console.log('Script blocking test: ERROR');
+                }
+            }
+        }
+        
+        // Test 4: Check for common ad blocker properties and DOM modifications
+        function testAdBlockerProperties() {
+            totalTests++;
+            try {
+                // Check for common ad blocker global variables or modified properties
+                const indicators = [
+                    window.canRunAds === false,
+                    window.isAdBlockActive === true,
+                ];
+                
+                // These indicators are more likely to be actual ad blockers, not Safari ITP
+                const strongIndicators = [
+                    // Check if Google Ad Services are blocked (less reliable, could be Safari)
+                    typeof window.google_jobrunner === 'undefined' && /Chrome/.test(navigator.userAgent), // Only check for Chrome
+                    // Check if common ad-related globals are missing when they should be present
+                    typeof window.googletag === 'undefined' && typeof window.pbjs === 'undefined' && !isSafari,
+                ];
+                
+                if (indicators.some(indicator => indicator) || strongIndicators.some(indicator => indicator)) {
+                    detectionCount++;
+                    console.log('Ad blocker properties test: DETECTED');
+                } else {
+                    console.log('Ad blocker properties test: not detected');
+                }
+            } catch (e) {
+                // Error accessing properties might indicate blocking, but be conservative
+                console.log('Ad blocker properties test: ERROR');
+            }
+        }
+        
+        // Test 5: Feature detection - check if fetch to ad URLs gets blocked (Safari ITP vs ad blocker)
+        function testFetchBlocking() {
+            totalTests++;
+            try {
+                // Try to fetch a common ad resource
+                fetch('https://www.google-analytics.com/analytics.js', { 
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                })
+                .then(() => {
+                    // Request succeeded, probably no ad blocker for this URL
+                    console.log('Fetch test: not blocked');
+                })
+                .catch(() => {
+                    // Request failed, likely blocked
+                    if (isSafari) {
+                        safariNativeBlocking++;
+                        console.log('Fetch test: BLOCKED (likely Safari ITP)');
+                    } else {
+                        detectionCount++;
+                        console.log('Fetch test: BLOCKED');
+                    }
+                });
+            } catch (e) {
+                detectionCount++;
+                console.log('Fetch test: ERROR');
+            }
+        }
+        
+        // Run all tests
+        testBaitElement();
+        testExternalResource();
+        testScriptBlocking();
+        testAdBlockerProperties();
+        testFetchBlocking();
+        
+        // Wait for all tests to complete and evaluate results
+        setTimeout(() => {
+            // Determine the result based on test outcomes
+            let result = 'none';
+            
+            // If bait element test detected blocking, it's definitely an ad blocker
+            // (Safari doesn't manipulate DOM elements with ad-related class names)
+            if (detectionCount > 0) {
+                result = 'enabled';
+                console.log(`Ad blocker detection: ${detectionCount}/${totalTests} tests detected actual ad blocking. Result: ENABLED`);
+            } else if (isSafari && safariNativeBlocking > 0) {
+                // Only Safari's native blocking detected (network-level blocking only)
+                result = 'safari-native';
+                console.log(`Ad blocker detection: Safari native blocking detected (${safariNativeBlocking} network tests), but no DOM manipulation. Result: SAFARI NATIVE`);
+            } else {
+                console.log(`Ad blocker detection: No blocking detected. Result: NONE`);
+            }
+            
+            resolve(result);
+        }, timeout);
     });
 }
 
@@ -505,7 +709,16 @@ async function generateGreeting() {
     const ipv4 = await getIPv4Address();
 
     // Detect adblocker presence
-    const adblockEnabled = await detectAdblock();
+    const adblockResult = await detectAdblock();
+    
+    let adblockDisplay;
+    if (adblockResult === 'enabled') {
+        adblockDisplay = 'enabled';
+    } else if (adblockResult === 'safari-native') {
+        adblockDisplay = 'Safari native blocking';
+    } else {
+        adblockDisplay = 'none';
+    }
     
     let greeting = `Good ${timeOfDay}! `;
 
@@ -624,7 +837,7 @@ async function generateGreeting() {
         <div class="detail">
             <div class="detail-title">Technical Details</div>
             <div class="detail-value">
-                Cookies ${navigator.cookieEnabled ? 'enabled' : 'disabled'} • Ad blocker: ${adblockEnabled ? 'enabled' : 'none'}${connectionInfo ? ' • Connection: ' + connectionInfo : ''}${batteryInfo ? ' • Battery: ' + batteryInfo : ''}
+                Cookies ${navigator.cookieEnabled ? 'enabled' : 'disabled'} • Ad blocker: ${adblockDisplay}${connectionInfo ? ' • Connection: ' + connectionInfo : ''}${batteryInfo ? ' • Battery: ' + batteryInfo : ''}
                 <div style="margin-top:8px; font-weight:600">Time on page: <span id="time-on-page" aria-live="off" aria-atomic="true">0s</span></div>
             </div>
         </div>

@@ -87,6 +87,16 @@ h1 {
     font-size: 0.9em;
 }
 
+.note a {
+    color: #d53369;
+    text-decoration: underline;
+}
+
+.note a:hover {
+    color: #b02855;
+    text-decoration: underline;
+}
+
 .footer {
     max-width: 600px;
     margin: 20px auto 0;
