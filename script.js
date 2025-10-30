@@ -631,6 +631,9 @@ async function generateGreeting() {
     `;
     
     document.getElementById('details').innerHTML = detailsHTML;
+    
+    // Initialize share functionality after content is generated
+    initializeShare();
 }
 
 generateGreeting();
@@ -674,3 +677,102 @@ generateGreeting();
     updateTime();
     setInterval(updateTime, 1000);
 })();
+
+// Share functionality
+function initializeShare() {
+    const shareBtn = document.getElementById('shareBtn');
+    const shareFallback = document.getElementById('shareFallback');
+    const copyBtn = document.getElementById('copyBtn');
+    const twitterShare = document.getElementById('twitterShare');
+    const linkedinShare = document.getElementById('linkedinShare');
+    const facebookShare = document.getElementById('facebookShare');
+    
+    // Check if elements exist
+    if (!shareBtn) {
+        console.error('Share button not found');
+        return;
+    }
+    
+    const shareData = {
+        title: 'What We Know About You - Browser Privacy Tool',
+        text: 'Check out what data your browser automatically shares with every website you visit.',
+        url: window.location.href
+    };
+    
+    console.log('Initializing share functionality');
+    
+    // Check if Web Share API is supported
+    if (navigator.share) {
+        console.log('Web Share API supported');
+        shareBtn.addEventListener('click', async () => {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    // If sharing fails, show fallback options
+                    console.log('Share failed, showing fallback');
+                    showFallbackOptions();
+                }
+            }
+        });
+    } else {
+        // No Web Share API, show fallback immediately
+        console.log('Web Share API not supported, using fallback');
+        shareBtn.addEventListener('click', showFallbackOptions);
+    }
+    
+    function showFallbackOptions() {
+        console.log('Showing fallback options');
+        if (shareFallback) {
+            shareFallback.classList.remove('hidden');
+            shareBtn.textContent = '📤 More Options';
+        }
+    }
+    
+        // Copy link functionality
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+                showCopySuccess();
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = shareData.url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopySuccess();
+            }
+        });
+    }
+    
+    function showCopySuccess() {
+        const successMsg = document.createElement('div');
+        successMsg.className = 'copy-success';
+        successMsg.textContent = '✅ Link copied!';
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => successMsg.classList.add('show'), 100);
+        setTimeout(() => {
+            successMsg.classList.remove('show');
+            setTimeout(() => document.body.removeChild(successMsg), 300);
+        }, 2000);
+    }
+    
+    // Social media share links
+    const encodedText = encodeURIComponent(shareData.text);
+    const encodedUrl = encodeURIComponent(shareData.url);
+    const encodedTitle = encodeURIComponent(shareData.title);
+    
+    if (twitterShare) {
+        twitterShare.href = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+    }
+    if (linkedinShare) {
+        linkedinShare.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+    }
+    if (facebookShare) {
+        facebookShare.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    }
+}
