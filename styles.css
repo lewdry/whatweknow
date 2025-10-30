@@ -117,3 +117,22 @@ button:focus {
 .detail-value {
     color: #333; /* Darker for better contrast */
 }
+
+/* Fix text selection behavior to only highlight selected text */
+.detail, .detail-title, .detail-value {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Ensure text selection background only covers the actual text */
+::selection {
+    background: rgba(213, 51, 105, 0.2);
+    color: inherit;
+}
+
+::-moz-selection {
+    background: rgba(213, 51, 105, 0.2);
+    color: inherit;
+}
