@@ -1,0 +1,120 @@
+/* Keep html sized to the viewport, but avoid forcing body to an exact
+   height so it can grow when content expands (prevents layout clipping).
+*/
+html {
+    height: 100%;
+}
+
+/* Skip link for keyboard navigation accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #d53369;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+    font-weight: 600;
+    z-index: 100;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 3px solid #770b2f;
+    outline-offset: 2px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    box-sizing: border-box;
+    padding: 20px;
+    background: linear-gradient(135deg, #d53369 0%, #cbad6d 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    min-height: 100vh;
+}
+
+.card {
+    max-width: 600px; /* move the width constraint to the card so the body background fills the viewport */
+    margin: 20px auto;
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+h1 {
+    color: #d53369;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.greeting {
+    font-size: 1.1em;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 20px;
+    /* Preserve newlines in the greeting text so `\n` appears as a line break */
+    white-space: pre-wrap;
+}
+
+.detail {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #d53369;
+}
+
+.detail-title {
+    font-weight: 600;
+    color: #d53369;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    color: #555;
+}
+
+.note {
+    margin-top: 20px;
+    padding: 20px;
+    background: #fff3cd;
+    border-radius: 8px;
+    color: #856404;
+    font-size: 0.9em;
+}
+
+.footer {
+    max-width: 600px;
+    margin: 20px auto 0;
+    text-align: left;
+    font-size: 0.85em;
+    font-style: italic;
+    color: #ffffff;
+}
+
+.footer a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.footer a:hover {
+    color: #770b2f; /* old #667eea*/
+    text-decoration: underline;
+}
+
+/* Improved focus states for keyboard navigation */
+a:focus,
+button:focus {
+    outline: 3px solid #770b2f;
+    outline-offset: 2px;
+}
+
+/* Ensure sufficient color contrast */
+.detail-value {
+    color: #333; /* Darker for better contrast */
+}
