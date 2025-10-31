@@ -59,6 +59,8 @@ h1 {
     height: 1em;
     width: auto;
     vertical-align: middle;
+    display: inline;
+    white-space: nowrap;
 }
 
 .greeting {
@@ -252,6 +254,11 @@ button:focus {
     .card {
         margin: 10px auto;
         padding: 20px 20px; /* Reduced horizontal padding from 40px to 20px for mobile */
+    }
+    
+    h1 {
+        flex-wrap: wrap;
+        font-size: 1.6em; /* Slightly smaller on mobile to reduce wrapping */
     }
     
     .footer {
