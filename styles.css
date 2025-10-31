@@ -50,6 +50,15 @@ h1 {
     color: #d53369;
     margin-bottom: 20px;
     font-size: 1.8em;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.logo-inline {
+    height: 1em;
+    width: auto;
+    vertical-align: middle;
 }
 
 .greeting {
@@ -232,4 +241,20 @@ button:focus {
 
 .copy-success.show {
     transform: translateX(0);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .card {
+        margin: 10px auto;
+        padding: 20px 20px; /* Reduced horizontal padding from 40px to 20px for mobile */
+    }
+    
+    .footer {
+        margin: 10px auto 0;
+    }
 }
