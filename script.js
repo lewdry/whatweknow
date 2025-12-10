@@ -989,3 +989,70 @@ function initializeShare() {
         facebookShare.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     }
 }
+
+// Theme toggle (light/dark) — toggled by selecting the header logo button
+(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    const logoImg = themeToggle.querySelector('.logo-inline');
+
+    function updateMetaThemeColor(color) {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', color);
+    }
+
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.setAttribute('aria-pressed', 'true');
+            themeToggle.title = 'Switch to dark theme';
+            if (logoImg) logoImg.classList.add('logo--light');
+            updateMetaThemeColor('#f7f8fb');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.setAttribute('aria-pressed', 'false');
+            themeToggle.title = 'Switch to light theme';
+            if (logoImg) logoImg.classList.remove('logo--light');
+            updateMetaThemeColor('#0a0e0d');
+        }
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            // ignore storage errors (e.g., private mode)
+        }
+    }
+
+    function toggleTheme() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        applyTheme(isLight ? 'dark' : 'light');
+        // Animate transition on toggles
+        document.documentElement.classList.add('theme-transition');
+        window.setTimeout(() => document.documentElement.classList.remove('theme-transition'), 300);
+    }
+
+    themeToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleTheme();
+    });
+
+    themeToggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleTheme();
+        }
+    });
+
+    // Initialize for first load using saved preference or OS prefers-color-scheme
+    try {
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+            applyTheme(saved);
+        } else {
+            const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            applyTheme(prefersLight ? 'light' : 'dark');
+        }
+    } catch (err) {
+        // if we can't access localStorage, default to dark
+        applyTheme('dark');
+    }
+})();

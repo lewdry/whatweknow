@@ -38,6 +38,31 @@
     --error: #ff4d6a;
 }
 
+/* Light mode — Quiet Light inspired palette.
+   Toggle by adding the attribute `data-theme="light"` to the document element (html).
+*/
+html[data-theme="light"] {
+    --bg-deep: #f7f8fb; /* soft, cool white */
+    --bg-card: #ffffff; /* card background */
+    --bg-elevated: #f3f5f8; /* slightly darker than card */
+    
+    --phosphor: #4f46e5; /* Quiet Light soft indigo */
+    --phosphor-dim: #3730a3;
+    --phosphor-glow: rgba(79, 70, 229, 0.08);
+    --phosphor-bright: #7c66ff;
+    
+    --amber: #c47a00;
+    --amber-dim: #9a5d00;
+    --amber-glow: rgba(196, 122, 0, 0.08);
+    
+    --text-primary: #17202a; /* dark text */
+    --text-secondary: #475569; /* soft slate */
+    --text-muted: #94a3b8;
+    
+    --border: #e6e9ef;
+    --border-glow: rgba(79, 70, 229, 0.12);
+}
+
 /* Base reset and setup */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -101,6 +126,23 @@ body {
         linear-gradient(90deg, rgba(0, 255, 157, 0.02) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: center center;
+}
+
+/* Light theme scanline / texture adjustments */
+html[data-theme="light"] body::before {
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.06) 2px,
+        rgba(255, 255, 255, 0.06) 4px
+    );
+}
+
+html[data-theme="light"] body {
+    background-image: 
+        linear-gradient(rgba(79, 70, 229, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 70, 229, 0.02) 1px, transparent 1px);
 }
 
 /* Main card container */
@@ -196,6 +238,65 @@ h1 {
     vertical-align: middle;
     display: inline;
     filter: drop-shadow(0 0 8px var(--phosphor-glow));
+}
+
+/* Logo button wrap so clicking/tapping the image toggles theme */
+.logo-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    height: 1.2em;
+}
+
+.logo-toggle:focus {
+    outline: 2px solid var(--phosphor);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+.logo-toggle[aria-pressed="true"] {
+    box-shadow: 0 0 10px var(--phosphor-glow);
+    border-radius: 6px;
+}
+
+.logo-toggle:hover {
+    transform: scale(1.03);
+}
+
+/* Smooth transitions when switching themes */
+body, .card, .detail, .note, .footer, .share-section {
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+/* Temporary transition helper added from JS when toggling to reduce flicker */
+.theme-transition * {
+    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease !important;
+}
+
+/* Indicator for light mode (small sun/outline) */
+.logo-toggle::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-left: 8px;
+    border-radius: 50%;
+    background: transparent;
+    vertical-align: middle;
+    transition: background 200ms ease, box-shadow 200ms ease;
+}
+.logo-toggle[aria-pressed="true"]::after {
+    background: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor-glow);
+}
+
+/* Light-mode logo subtle filter */
+.logo-inline.logo--light {
+    filter: drop-shadow(0 0 6px rgba(79, 70, 229, 0.08));
 }
 
 /* Status/greeting text */
