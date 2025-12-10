@@ -1,6 +1,48 @@
-/* Keep html sized to the viewport, but avoid forcing body to an exact
-   height so it can grow when content expands (prevents layout clipping).
-*/
+/* ═══════════════════════════════════════════════════════════════════════════
+   WHAT WE KNOW — Terminal/Data Exposure Aesthetic
+   Typography: IBM Plex Mono
+   Theme: Dark terminal with phosphor green + amber accents
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Core palette — CRT terminal inspired */
+    --bg-deep: #0a0e0d;
+    --bg-card: #0d1311;
+    --bg-elevated: #131a17;
+    
+    /* Phosphor green — main accent */
+    --phosphor: #00ff9d;
+    --phosphor-dim: #00cc7d;
+    --phosphor-glow: rgba(0, 255, 157, 0.15);
+    --phosphor-bright: #7fffcc;
+    
+    /* Amber — warnings & highlights */
+    --amber: #ffb800;
+    --amber-dim: #cc9300;
+    --amber-glow: rgba(255, 184, 0, 0.12);
+    
+    /* Text hierarchy */
+    --text-primary: #e8f0ed;
+    --text-secondary: #8a9e96;
+    --text-muted: #4a5a54;
+    
+    /* Borders & lines */
+    --border: #1e2a26;
+    --border-glow: rgba(0, 255, 157, 0.3);
+    
+    /* Functional */
+    --success: #00ff9d;
+    --warning: #ffb800;
+    --error: #ff4d6a;
+}
+
+/* Base reset and setup */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 html {
     height: 100%;
 }
@@ -10,136 +52,291 @@ html {
     position: absolute;
     top: -40px;
     left: 0;
-    background: #d53369;
-    color: white;
+    background: var(--phosphor);
+    color: var(--bg-deep);
     padding: 8px 16px;
     text-decoration: none;
-    border-radius: 0 0 4px 0;
+    font-family: 'IBM Plex Mono', monospace;
     font-weight: 600;
+    font-size: 0.85em;
     z-index: 100;
 }
 
 .skip-link:focus {
     top: 0;
-    outline: 3px solid #770b2f;
+    outline: 2px solid var(--phosphor);
     outline-offset: 2px;
 }
 
+/* Scanline overlay effect */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'IBM Plex Mono', monospace;
     margin: 0;
-    box-sizing: border-box;
-    padding: 20px;
-    background: linear-gradient(135deg, #d53369 0%, #cbad6d 100%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: cover;
+    padding: 24px;
+    background: var(--bg-deep);
     min-height: 100vh;
+    color: var(--text-primary);
+    
+    /* Subtle grid pattern background */
+    background-image: 
+        linear-gradient(rgba(0, 255, 157, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 157, 0.02) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: center center;
 }
 
+/* Main card container */
 .card {
-    max-width: 600px; /* move the width constraint to the card so the body background fills the viewport */
-    margin: 20px auto;
-    background: white;
-    border-radius: 16px;
-    padding: 20px 40px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 680px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 32px 40px;
+    position: relative;
+    
+    /* Corner accents */
+    clip-path: polygon(
+        0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), 
+        calc(100% - 12px) 100%, 0 100%
+    );
+    
+    /* Glow effect */
+    box-shadow: 
+        0 0 0 1px var(--border),
+        0 0 40px var(--phosphor-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    
+    /* Entry animation */
+    animation: cardReveal 0.6s ease-out;
 }
 
+@keyframes cardReveal {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Corner decoration */
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border-left: 2px solid var(--phosphor);
+    border-top: 2px solid var(--phosphor);
+    opacity: 0.6;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border-right: 2px solid var(--phosphor);
+    border-bottom: 2px solid var(--phosphor);
+    opacity: 0.6;
+}
+
+/* Header */
 h1 {
-    color: #d53369;
-    margin-bottom: 20px;
-    font-size: 1.8em;
+    color: var(--phosphor);
+    margin: 0 0 24px 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     display: flex;
     align-items: center;
     gap: 0.5em;
+    
+    /* Subtle glow */
+    text-shadow: 0 0 30px var(--phosphor-glow);
+    
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 20px var(--phosphor-glow);
+    }
+    to {
+        text-shadow: 0 0 40px rgba(0, 255, 157, 0.25);
+    }
 }
 
 .logo-inline {
-    height: 1em;
+    height: 1.2em;
     width: auto;
     vertical-align: middle;
     display: inline;
-    white-space: nowrap;
+    filter: drop-shadow(0 0 8px var(--phosphor-glow));
 }
 
+/* Status/greeting text */
 .greeting {
-    font-size: 1.1em;
-    line-height: 1.5;
-    color: #333;
-    margin-bottom: 20px;
+    font-size: 0.95em;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
     white-space: pre-wrap;
+    padding-left: 16px;
+    border-left: 2px solid var(--text-muted);
+    
+    animation: fadeIn 0.8s ease-out 0.2s both;
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Data detail blocks */
 .detail {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border-left: 4px solid #d53369;
+    background: var(--bg-elevated);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--phosphor);
+    position: relative;
+    
+    /* Staggered reveal animation */
+    opacity: 0;
+    animation: detailSlide 0.4s ease-out forwards;
+}
+
+/* Animation delays for staggered reveal */
+.detail:nth-child(1) { animation-delay: 0.1s; }
+.detail:nth-child(2) { animation-delay: 0.15s; }
+.detail:nth-child(3) { animation-delay: 0.2s; }
+.detail:nth-child(4) { animation-delay: 0.25s; }
+.detail:nth-child(5) { animation-delay: 0.3s; }
+.detail:nth-child(6) { animation-delay: 0.35s; }
+.detail:nth-child(7) { animation-delay: 0.4s; }
+.detail:nth-child(8) { animation-delay: 0.45s; }
+.detail:nth-child(9) { animation-delay: 0.5s; }
+.detail:nth-child(10) { animation-delay: 0.55s; }
+
+@keyframes detailSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.detail:hover {
+    background: rgba(0, 255, 157, 0.03);
+    border-left-color: var(--phosphor-bright);
 }
 
 .detail-title {
     font-weight: 600;
-    color: #d53369;
-    margin-bottom: 5px;
+    color: var(--phosphor-dim);
+    margin-bottom: 6px;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .detail-value {
-    color: #555;
+    color: var(--text-primary);
+    font-size: 0.95em;
+    word-break: break-word;
 }
 
+/* Privacy note — amber warning style */
 .note {
-    margin-top: 20px;
+    margin-top: 28px;
     padding: 20px;
-    background: #fff3cd;
-    border-radius: 8px;
-    color: #856404;
-    font-size: 0.9em;
+    background: rgba(255, 184, 0, 0.05);
+    border: 1px solid rgba(255, 184, 0, 0.2);
+    border-left: 3px solid var(--amber);
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    line-height: 1.6;
+    
+    animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+.note strong {
+    color: var(--amber);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .note a {
-    color: #d53369;
-    text-decoration: underline;
+    color: var(--phosphor);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
 }
 
 .note a:hover {
-    color: #b02855;
-    text-decoration: underline;
+    border-bottom-color: var(--phosphor);
 }
 
+/* Footer */
 .footer {
-    max-width: 600px;
-    margin: 20px auto 0;
+    max-width: 680px;
+    margin: 24px auto 0;
     text-align: left;
-    font-size: 0.85em;
-    font-style: italic;
-    color: #ffffff;
+    font-size: 0.8em;
+    color: var(--text-muted);
+    padding-left: 4px;
+    
+    animation: fadeIn 1s ease-out 0.8s both;
 }
 
 .footer a {
-    color: #ffffff;
-    text-decoration: underline;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .footer a:hover {
-    color: #770b2f; /* old #667eea*/
-    text-decoration: underline;
+    color: var(--phosphor);
 }
 
 /* Improved focus states for keyboard navigation */
 a:focus,
 button:focus {
-    outline: 3px solid #770b2f;
+    outline: 2px solid var(--phosphor);
     outline-offset: 2px;
 }
 
-/* Ensure sufficient color contrast */
-.detail-value {
-    color: #333; /* Darker for better contrast */
-}
-
-/* Fix text selection behavior to only highlight selected text */
+/* Text selection */
 .detail, .detail-title, .detail-value {
     -webkit-user-select: text;
     -moz-user-select: text;
@@ -147,53 +344,71 @@ button:focus {
     user-select: text;
 }
 
-/* Ensure text selection background only covers the actual text */
 ::selection {
-    background: rgba(213, 51, 105, 0.2);
+    background: rgba(0, 255, 157, 0.25);
     color: inherit;
 }
 
 ::-moz-selection {
-    background: rgba(213, 51, 105, 0.2);
+    background: rgba(0, 255, 157, 0.25);
     color: inherit;
 }
 
-/* Share functionality styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Share functionality styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .share-section {
-    margin-top: 20px;
+    margin-top: 28px;
     text-align: center;
+    animation: fadeIn 0.8s ease-out 0.7s both;
 }
 
 .share-btn, .copy-btn {
-    background: linear-gradient(135deg, #d53369 0%, #cbad6d 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-size: 1em;
-    font-weight: 600;
+    background: transparent;
+    color: var(--phosphor);
+    border: 1px solid var(--phosphor);
+    padding: 12px 28px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(213, 51, 105, 0.3);
     margin: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.share-btn::before, .copy-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 157, 0.1), transparent);
+    transition: left 0.4s ease;
 }
 
 .share-btn:hover, .copy-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(213, 51, 105, 0.4);
+    background: rgba(0, 255, 157, 0.1);
+    box-shadow: 0 0 20px var(--phosphor-glow);
+}
+
+.share-btn:hover::before, .copy-btn:hover::before {
+    left: 100%;
 }
 
 .share-btn:active, .copy-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(213, 51, 105, 0.3);
+    transform: scale(0.98);
 }
 
 .share-fallback {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    border: 1px solid #e9ecef;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
 }
 
 .share-fallback.hidden {
@@ -201,41 +416,44 @@ button:focus {
 }
 
 .social-links {
-    margin-top: 10px;
+    margin-top: 12px;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .social-links a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: #fff;
+    width: 44px;
+    height: 44px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     text-decoration: none;
-    font-size: 1.2em;
+    font-size: 1.1em;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .social-links a:hover {
+    border-color: var(--phosphor);
+    background: rgba(0, 255, 157, 0.05);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+/* Success notification */
 .copy-success {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #28a745;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    background: var(--bg-card);
+    color: var(--phosphor);
+    padding: 14px 24px;
+    border: 1px solid var(--phosphor);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.85em;
+    box-shadow: 0 0 30px var(--phosphor-glow);
     transform: translateX(300px);
     transition: transform 0.3s ease;
     z-index: 1000;
@@ -245,23 +463,47 @@ button:focus {
     transform: translateX(0);
 }
 
-/* Mobile responsive styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile responsive styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @media (max-width: 768px) {
     body {
-        padding: 10px;
+        padding: 16px;
     }
     
     .card {
-        margin: 10px auto;
-        padding: 20px 20px; /* Reduced horizontal padding from 40px to 20px for mobile */
+        margin: 0 auto;
+        padding: 24px 20px;
+        
+        /* Simpler clip-path on mobile */
+        clip-path: polygon(
+            0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), 
+            calc(100% - 8px) 100%, 0 100%
+        );
+    }
+    
+    .card::before,
+    .card::after {
+        width: 24px;
+        height: 24px;
     }
     
     h1 {
         flex-wrap: wrap;
-        font-size: 1.6em; /* Slightly smaller on mobile to reduce wrapping */
+        font-size: 1.3em;
+    }
+    
+    .detail {
+        padding: 14px 16px;
     }
     
     .footer {
-        margin: 10px auto 0;
+        margin: 16px auto 0;
+    }
+    
+    .share-btn, .copy-btn {
+        padding: 10px 20px;
+        font-size: 0.8em;
     }
 }
